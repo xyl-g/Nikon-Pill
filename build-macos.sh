@@ -32,8 +32,13 @@ rm -rf build dist
 APP="dist/Nikon Pill.app"
 codesign --force --deep -s - "$APP"          # ad-hoc; replaces expired-ctl signing noise
 
+# Version comes from the git tag (v0.1.0 -> 0.1.0); falls back to 0.0.0-dev
+# for untagged local builds so the workflow needs no hardcoded numbers.
+VERSION=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || true)
+VERSION=${VERSION:-0.0.0-dev}
+
 VOLNAME="Nikon Pill"
-DMG="dist/NikonPill-0.1.0-macOS.dmg"
+DMG="dist/NikonPill-${VERSION}-macOS.dmg"
 rm -f "$DMG"
 mkdir -p build/dmg-staging
 cp -R "$APP" build/dmg-staging/

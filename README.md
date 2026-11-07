@@ -38,7 +38,8 @@
 要求：Python ≥ 3.10（本机无需 clang——内置工具包走预编译模式）。
 
 ```sh
-cd nikon-pill
+git clone https://github.com/xyl-g/Nikon-Pill.git
+cd Nikon-Pill
 python3 -m venv .venv && .venv/bin/pip install PySide6 capstone==5.0.7   # Windows: py -m venv .venv
 ./.venv/bin/python backend.py --toolkit ~/git/NikonFirmwarePatch-toolkit-v0.4.0-rc.2   # 自测
 ./.venv/bin/python main.py                                             # 启动 GUI

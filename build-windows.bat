@@ -25,5 +25,12 @@ if exist build rmdir /s /q build
 if exist dist rmdir /s /q dist
 python make_icon.py
 python -m PyInstaller --noconfirm nikon-pill-win.spec
-echo -- done: dist\NikonPill.exe --
+
+REM Version comes from the git tag (v0.1.0 -> 0.1.0); falls back to 0.0.0-dev.
+set "VERSION="
+for /f %%i in ('git describe --tags --abbrev^=0 2^>nul') do set "VERSION=%%i"
+set "VERSION=%VERSION:v=%"
+if "%VERSION%"=="" set "VERSION=0.0.0-dev"
+ren "dist\NikonPill.exe" "NikonPill-%VERSION%-Windows.exe" >nul 2>&1 || copy /y "dist\NikonPill.exe" "dist\NikonPill-%VERSION%-Windows.exe" >nul
+echo -- done: dist\NikonPill-%VERSION%-Windows.exe --
 endlocal

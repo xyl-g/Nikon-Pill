@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 
 from PySide6.QtCore import Qt, QUrl, QTimer
-from PySide6.QtGui import QCloseEvent, QDesktopServices, QFont, QGuiApplication
+from PySide6.QtGui import QCloseEvent, QDesktopServices, QFont, QGuiApplication, QPixmap
 from PySide6.QtWidgets import (
     QFileDialog, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit,
     QMainWindow, QMessageBox, QProgressBar, QPushButton, QTextEdit,
@@ -79,10 +79,16 @@ class MainWindow(QMainWindow):
 
     def _build_header(self):
         row = QHBoxLayout()
-        logo = QLabel('💊')
+        # Hand-drawn pill (same artwork as the app icon) instead of the
+        # emoji glyph — Segoe UI Emoji on Windows renders a pink pill.
+        # Rendered at native 2x for crispness, no downscale blur.
+        logo = QLabel()
         logo.setObjectName('logo')
         logo.setFixedSize(44, 44)
-        logo.setAlignment(Qt.AlignCenter)
+        from make_icon import render as render_icon
+        pix = QPixmap.fromImage(render_icon(88))   # 2x for Retina
+        pix.setDevicePixelRatio(2.0)
+        logo.setPixmap(pix)
         row.addWidget(logo)
         col = QVBoxLayout()
         col.setSpacing(1)

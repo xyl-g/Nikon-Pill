@@ -30,8 +30,7 @@ QLabel[cardTitle="true"] {{ font-size: 15px; font-weight: 700; }}
 QLabel[hint="true"] {{ color: {MUTED}; font-size: 12px; }}
 QLabel[faint="true"] {{ color: {FAINT}; font-size: 12px; }}
 QLabel#logo {{
-    background: {CARD}; border: 1px solid {BORDER}; border-radius: 12px;
-    font-size: 22px; padding: 4px 9px;
+    background: transparent; border: none;
 }}
 
 QLineEdit {{

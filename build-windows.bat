@@ -1,0 +1,29 @@
+@echo off
+REM Build Nikon Pill one-file EXE on Windows.
+REM Prereqs: Python 3.10+ on PATH; the toolkit is auto-vendored.
+setlocal
+cd /d "%~dp0"
+
+set "VENDOR=%NFP_VENDOR_DIR%"
+if "%VENDOR%"=="" set "VENDOR=%USERPROFILE%\git\NikonFirmwarePatch-toolkit-v0.4.0-rc.2"
+
+set "ZIP_URL=https://github.com/XinmiaoZhao/NikonFirmwarePatch/releases/download/v0.4.0-rc.2/NikonFirmwarePatch-v0.4.0-rc.2-toolkit.zip"
+set "ZIP_SHA=9a00183b54ee80e02e89445a59f5806a1e738ea22e2400538221ca27c21d9b4c"
+
+if not exist "%VENDOR%\patch.py" (
+  echo -- vendoring toolkit from Release ZIP --
+  if not exist vendor mkdir vendor
+  curl -sL -o vendor\nfp-toolkit.zip "%ZIP_URL%"
+  certutil -hashfile vendor\nfp-toolkit.zip SHA256 | find /i "%ZIP_SHA%" >nul || (echo SHA-256 mismatch & exit /b 1)
+  tar -xf vendor\nfp-toolkit.zip -C vendor
+  set "VENDOR=%CD%\vendor\NikonFirmwarePatch-v0.4.0-rc.2"
+)
+set "NFP_VENDOR_DIR=%VENDOR%"
+
+python -m pip install --quiet pyinstaller PySide6 capstone==5.0.7
+if exist build rmdir /s /q build
+if exist dist rmdir /s /q dist
+python make_icon.py
+python -m PyInstaller --noconfirm nikon-pill-win.spec
+echo -- done: dist\NikonPill.exe --
+endlocal

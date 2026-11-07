@@ -7,3 +7,4 @@ vendor/
 __pycache__/
 *.pyc
 .DS_Store
+_nfp_stage/

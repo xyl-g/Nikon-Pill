@@ -1,8 +1,13 @@
 # 💊 Nikon Pill
 
-**Nikon Z8 · C 3.11 固件补丁图形构建器** —— [NikonFirmwarePatch](https://github.com/XinmiaoZhao/NikonFirmwarePatch)（NFP）的官方工具只有命令行，Nikon Pill 把它包装成人人可用的桌面应用：选固件、勾功能、填版本号，一键产出可在相机菜单显示新版本号的固件。
+**Nikon Z8 · C 3.11 固件补丁图形构建器** —— 一份原厂固件，两套补丁方案二选一：
 
-**跨平台**：macOS（DMG）与 Windows（EXE）。完整 NFP 工具包（含 9 个预编译补丁单元）已内置在应用里——**无需安装 Python，无需编译器，开箱即用**。
+| 方案 | 来源 | 特点 |
+|---|---|---|
+| **NikonFirmwarePatch** | [XinmiaoZhao/NikonFirmwarePatch](https://github.com/XinmiaoZhao/NikonFirmwarePatch) v0.4.0-rc.2 | 四功能组任意组合（15 种）、自定版本号（相机菜单显示）、构建含独立字节级校验 |
+| **Fenestra Z8 (cold-retry3)** | [PIPA12344/Fenestra-Z8-C311-source](https://github.com/PIPA12344/Fenestra-Z8-C311-source) r10 | 官方基线一键应用（秒级），机内经 **Z8Mouldes** 模块菜单使用，功能经 `.wlm` 插件扩展 |
+
+两套工具包在打包时**全部内置**（构建脚本自动从各自上游 Release/vendor），最终用户**无需安装 Python、无需编译器、无需下载任何工具**。
 
 ![Nikon Pill 主界面 — 全选四组构建完成并通过独立校验](docs/screenshot-main.png)
 
@@ -26,12 +31,19 @@
 
 应用内流程：
 
-1. **固件文件** — 选择 Nikon 官方 `Z_8_0311.bin`（或直接拖入窗口），自动校验
-2. **补丁功能组** — 点卡片选择：画面构图（开放门）/ 视频品质（ProRes·H.265 码率）/ Log 色彩 / 拍照工具（RAW 预拍·像素偏移）
-3. **版本与输出** — 公开版本（相机将显示）、内部 tag（默认 p0）、保存位置（任意文件夹，自动建时间戳子目录）
-4. **构建固件** — 后台运行 1–3 分钟，完成后自动独立校验，结果面板一键「打开输出目录」「复制 SHA-256」
+1. **构建方案** — 两张方案卡二选一（NFP 组合构建 / Fenestra 基线应用）
+2. **固件文件** — 选择 Nikon 官方 `Z_8_0311.bin`（或直接拖入窗口），自动校验
+3. **按方案分支**：
+   - *NikonFirmwarePatch*：点功能组卡片组合（画面构图 / 视频品质 / Log 色彩 / 拍照工具），填公开版本（相机将显示）与内部 tag
+   - *Fenestra*：功能与版本由 `cold-retry3.fxpatch` 决定，无需选择；产物 `Z_8_0311-cold-retry3.bin`
+4. **输出位置** — 任意文件夹（可已存在）；NFP 自动建时间戳子目录，Fenestra 直接产出单文件
+5. **构建固件** — 后台运行；NFP 用时 1–3 分钟，Fenestra 数秒。完成后自动校验：
+   - NFP：独立字节级比对（PASS 才算成功），支持「重新校验」
+   - Fenestra：结果 SHA-256 与官方 r10 基线（`0a9cdd07…`）比对，一致即 PASS
 
-> 版本规则 `NN.NN`、tag `小写字母+数字`；`00.xx` 为上游离线测试保留，实机请避开。不同功能组合建议用不同版本身份，便于机内区分。
+> 版本规则 `NN.NN`、tag `小写字母+数字`（仅 NFP 方案）；`00.xx` 为上游保留，实机请避开。
+> 不同功能组合建议用不同版本身份，便于机内区分。Fenestra 产物刷入后，将 Release 里的
+> `FENESTRA/` 文件夹（含 .wlm 插件）放到存储卡根目录即可在机内 Z8Mouldes 菜单使用。
 
 ## 🔧 从源码运行（开发者）
 

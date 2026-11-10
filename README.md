@@ -9,7 +9,7 @@
 
 两套工具包在打包时**全部内置**（构建脚本自动从各自上游 Release/vendor），最终用户**无需安装 Python、无需编译器、无需下载任何工具**。
 
-![Nikon Pill 主界面 — 全选四组构建完成并通过独立校验](docs/screenshot-main.png)
+![Nikon Pill 主界面 — NFP 方案全选四组构建完成并通过独立校验](docs/screenshot-main.png)
 
 ## ✨ 特性
 
@@ -21,6 +21,10 @@
 - **结构化日志** — 等宽字体、级别着色（info/warn/err/ok），引擎输出的 JSON 噪音已过滤
 
 ![校验失败时的就地错误面板](docs/screenshot-error.png)
+
+**Fenestra 方案**：功能组/版本区块自动折叠，一键应用官方基线，结果与 `0a9cdd07…` 比对：
+
+![Fenestra 方案 — 一键应用 cold-retry3 基线并比对官方哈希](docs/screenshot-fenestra.png)
 
 ## 📦 下载使用（最终用户）
 

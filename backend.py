@@ -182,7 +182,9 @@ def output_name(version: str) -> str:
 def _engine_cmd(info: ToolkitInfo, script: str, args: list) -> list:
     if info.mode == 'frozen':
         return [sys.executable, '--nfp-engine-' + script, *args]
-    return [sys.executable, '-B', str(info.engine_py), *args]
+    # Source mode: pick the engine file by role, not the default one.
+    path = info.verify_py if script == 'verify' and info.verify_py else info.engine_py
+    return [sys.executable, '-B', str(path), *args]
 
 
 def check_cmd(info: ToolkitInfo, firmware: Path) -> list:

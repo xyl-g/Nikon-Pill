@@ -20,15 +20,19 @@ if not exist "%VENDOR%\patch.py" (
 )
 set "NFP_VENDOR_DIR=%VENDOR%"
 
-REM Fenestra toolkit (stdlib-only patcher + pinned cold-retry3.fxpatch).
+REM Fenestra engine: only two stdlib files + the pinned fxpatch, fetched
+REM over HTTP (no git clone).
 set "FENESTRA=%FENESTRA_VENDOR_DIR%"
-if "%FENESTRA%"=="" set "FENESTRA=%USERPROFILE%\git\Fenestra-Z8-C311-source"
+if "%FENESTRA%"=="" set "FENESTRA=%CD%\vendor\fenestra-z8"
+set "FEN_RAW=https://raw.githubusercontent.com/PIPA12344/Fenestra-Z8-C311-source/cold-retry3-source"
 set "FX_URL=https://github.com/PIPA12344/Fenestra-Z8-C311-source/releases/download/wlm-2026.11.10-r10/cold-retry3.fxpatch"
 set "FX_SHA=395b05e5db84c464e6cb44b178623cf5d237cd9aef5d8ed9ad0b8cfc244758a1"
 
 if not exist "%FENESTRA%\patcher.py" (
-  echo -- vendoring Fenestra cold-retry3-source --
-  git clone --depth 1 --branch cold-retry3-source https://github.com/PIPA12344/Fenestra-Z8-C311-source.git "%FENESTRA%"
+  echo -- vendoring Fenestra engine -- 2 files, no git
+  mkdir "%FENESTRA%\host" 2>nul
+  curl -sfL -o "%FENESTRA%\patcher.py" "%FEN_RAW%/patcher.py"
+  curl -sfL -o "%FENESTRA%\host\cipher_patch.py" "%FEN_RAW%/host/cipher_patch.py"
 )
 if not exist "%FENESTRA%\cold-retry3.fxpatch" (
   echo -- downloading cold-retry3.fxpatch --

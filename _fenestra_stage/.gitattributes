@@ -1,2 +1,0 @@
-# Keep exact bytes on add/checkout: source, vendor and delivery identities are SHA-256 pinned.
-* -text

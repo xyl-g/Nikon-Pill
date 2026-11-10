@@ -27,7 +27,7 @@ set "FX_URL=https://github.com/PIPA12344/Fenestra-Z8-C311-source/releases/downlo
 set "FX_SHA=395b05e5db84c464e6cb44b178623cf5d237cd9aef5d8ed9ad0b8cfc244758a1"
 
 if not exist "%FENESTRA%\patcher.py" (
-  echo -- vendoring Fenestra (cold-retry3-source branch) --
+  echo -- vendoring Fenestra cold-retry3-source --
   git clone --depth 1 --branch cold-retry3-source https://github.com/PIPA12344/Fenestra-Z8-C311-source.git "%FENESTRA%"
 )
 if not exist "%FENESTRA%\cold-retry3.fxpatch" (

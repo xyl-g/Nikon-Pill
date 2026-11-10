@@ -8,3 +8,5 @@ __pycache__/
 *.pyc
 .DS_Store
 _nfp_stage/
+_fenestra_stage/
+_nfp_stage/

@@ -157,6 +157,13 @@ class MainWindow(QMainWindow):
         self._fenestra_patch = None
         self.fx_widget.setVisible(key == 'fenestra' and not FROZEN)
         self._refresh_toolkit()
+        # The check verdict is toolkit-specific (engine check vs content
+        # hash): re-validate the already-picked firmware, and re-enable the
+        # button via _update_state once it lands.
+        if self.info is not None and self.info.ready and self._fw_path is not None:
+            self._run_check()
+        else:
+            self._update_state()
 
     def _build_header(self):
         row = QHBoxLayout()
@@ -249,6 +256,7 @@ class MainWindow(QMainWindow):
         for i, (key, name, desc) in enumerate(FEATURES):
             cardf = QFrame()
             cardf.setProperty('featCard', True)
+            cardf.setProperty('selected', True)   # default: all groups on
             cardf.setCursor(Qt.PointingHandCursor)
             v = QVBoxLayout(cardf)
             v.setContentsMargins(14, 11, 14, 11)

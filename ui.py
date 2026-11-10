@@ -10,8 +10,8 @@ from PySide6.QtCore import Qt, QUrl, QTimer
 from PySide6.QtGui import QCloseEvent, QDesktopServices, QFont, QGuiApplication, QPixmap
 from PySide6.QtWidgets import (
     QFileDialog, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit,
-    QMainWindow, QMessageBox, QProgressBar, QPushButton, QTextEdit,
-    QVBoxLayout, QWidget,
+    QMainWindow, QMessageBox, QProgressBar, QPushButton, QScrollArea,
+    QTextEdit, QVBoxLayout, QWidget,
 )
 
 import theme
@@ -39,6 +39,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle(f'{APP_NAME} — Nikon Z8 固件补丁构建器')
         self.resize(1000, 900)
+        self.setMinimumSize(780, 560)
         self.info = None
         self.worker = None
         self._check_worker = None
@@ -72,8 +73,16 @@ class MainWindow(QMainWindow):
     # ---------- construction ----------
 
     def _init_ui(self):
+        # Scrollable central area: the window can shrink without squeezing
+        # cards, and tall content scrolls instead of bouncing layouts.
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         central = QWidget()
-        self.setCentralWidget(central)
+        scroll.setWidget(central)
+        scroll.setMinimumWidth(760)
+        self.setCentralWidget(scroll)
         root = QVBoxLayout(central)
         root.setContentsMargins(30, 22, 30, 22)
         root.setSpacing(14)
@@ -81,7 +90,8 @@ class MainWindow(QMainWindow):
         root.addLayout(self._build_header())
         root.addWidget(self._build_toolkit_card())
         root.addWidget(self._build_firmware_card())
-        root.addWidget(self._build_features_card())
+        self._features_card = self._build_features_card()
+        root.addWidget(self._features_card)
         root.addWidget(self._build_output_card())
         root.addLayout(self._build_action_row())
         self.progress = QProgressBar()
@@ -277,19 +287,27 @@ class MainWindow(QMainWindow):
             l.setProperty('hint', True)
             return l
 
-        g.addWidget(field_label('公开版本'), 0, 0)
-        g.addWidget(field_label('内部 tag'), 0, 1)
+        # Version/tag rows live in their own collapsible block: the Fenestra
+        # scheme is content-pinned, so these NFP-only fields hide entirely.
+        self._version_fields = QWidget()
+        vg = QGridLayout(self._version_fields)
+        vg.setContentsMargins(0, 0, 0, 0)
+        vg.setHorizontalSpacing(16)
+        vg.setVerticalSpacing(4)
+        vg.addWidget(field_label('公开版本'), 0, 0)
+        vg.addWidget(field_label('内部 tag'), 0, 1)
         self.version_edit = QLineEdit()
         self.version_edit.setPlaceholderText('NN.NN，例如 04.06')
-        g.addWidget(self.version_edit, 1, 0)
+        vg.addWidget(self.version_edit, 1, 0)
         self.tag_edit = QLineEdit('p0')
-        g.addWidget(self.tag_edit, 1, 1)
+        vg.addWidget(self.tag_edit, 1, 1)
         self.version_note = QLabel('格式 NN.NN')
         self.version_note.setProperty('faint', True)
-        g.addWidget(self.version_note, 2, 0)
+        vg.addWidget(self.version_note, 2, 0)
         self.tag_note = QLabel('仅记录用，不显示在相机菜单')
         self.tag_note.setProperty('faint', True)
-        g.addWidget(self.tag_note, 2, 1)
+        vg.addWidget(self.tag_note, 2, 1)
+        g.addWidget(self._version_fields, 0, 0, 3, 2)
 
         g.addWidget(field_label('输出位置'), 3, 0, 1, 2)
         out_row = QHBoxLayout()
@@ -498,12 +516,12 @@ class MainWindow(QMainWindow):
         self.tk_status.setText(('✓ ' if self.info.ready else '⚠ ') + notes)
         self.tk_status.setStyleSheet('' if self.info.ready else f'color: {theme.WARN};')
         is_fenestra = self.info.kind == 'fenestra'
-        self.version_edit.setEnabled(not is_fenestra)
-        self.tag_edit.setEnabled(not is_fenestra)
-        self.ft_all_btn.setVisible(not is_fenestra)
-        self.ft_none_btn.setVisible(not is_fenestra)
-        for cardf in self.feature_boxes.values():
-            cardf.setEnabled(not is_fenestra)
+        # Fenestra is content-pinned: collapse the NFP-only blocks entirely
+        # (feature groups, version/tag fields, fxpatch picker) instead of
+        # showing disabled widgets.
+        self._features_card.setVisible(not is_fenestra)
+        self._version_fields.setVisible(not is_fenestra)
+        self.fx_widget.setVisible(is_fenestra and not FROZEN and not self.info.ready)
         self._update_state()
 
     def _kind_matches_dir(self, path: Path) -> bool:

@@ -82,6 +82,17 @@ QTextEdit {{
     font-family: {MONO}; font-size: 12px; padding: 8px 10px;
     selection-background-color: #dbeafe; selection-color: {TEXT};
 }}
+QScrollArea {{ background: transparent; border: none; }}
+QScrollArea > QWidget > QWidget {{ background: transparent; }}
+QScrollBar:vertical {{
+    background: transparent; width: 10px; margin: 2px;
+}}
+QScrollBar::handle:vertical {{
+    background: #c9cdd4; border-radius: 5px; min-height: 40px;
+}}
+QScrollBar::handle:vertical:hover {{ background: #b3b8c0; }}
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; }}
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{ background: transparent; }}
 QProgressBar {{
     background: #e9ebef; border: none; border-radius: 3px; max-height: 6px;
 }}

@@ -4,7 +4,7 @@
 
 | 方案 | 来源 | 特点 |
 |---|---|---|
-| **NikonFirmwarePatch** | [XinmiaoZhao/NikonFirmwarePatch](https://github.com/XinmiaoZhao/NikonFirmwarePatch) v0.4.0-rc.2 | 四功能组任意组合（15 种）、自定版本号（相机菜单显示）、构建含独立字节级校验 |
+| **NikonFirmwarePatch** | [XinmiaoZhao/NikonFirmwarePatch](https://github.com/XinmiaoZhao/NikonFirmwarePatch) v0.4.0 | 四功能组任意组合（15 种）、自定版本号（相机菜单显示）、构建含独立字节级校验 |
 | **Fenestra Z8 (cold-retry3)** | [PIPA12344/Fenestra-Z8-C311-source](https://github.com/PIPA12344/Fenestra-Z8-C311-source) r10 | 官方基线一键应用（秒级），机内经 **Z8Mouldes** 模块菜单使用，功能经 `.wlm` 插件扩展 |
 
 两套工具包在打包时**全部内置**（构建脚本自动从各自上游 Release/vendor），最终用户**无需安装 Python、无需编译器、无需下载任何工具**。
@@ -57,7 +57,7 @@
 git clone https://github.com/xyl-g/Nikon-Pill.git
 cd Nikon-Pill
 python3 -m venv .venv && .venv/bin/pip install PySide6 capstone==5.0.7   # Windows: py -m venv .venv
-./.venv/bin/python backend.py --toolkit ~/git/NikonFirmwarePatch-toolkit-v0.4.0-rc.2   # 自测
+./.venv/bin/python backend.py --toolkit ~/git/NikonFirmwarePatch-toolkit-v0.4.0   # 自测
 ./.venv/bin/python main.py                                             # 启动 GUI
 ```
 
@@ -65,7 +65,7 @@ python3 -m venv .venv && .venv/bin/pip install PySide6 capstone==5.0.7   # Windo
 
 | 工具来源 | 获取方式 | 构建模式 |
 |---|---|---|
-| **完整 Release 工具包**（推荐） | 从 [NFP Releases](https://github.com/XinmiaoZhao/NikonFirmwarePatch/releases/tag/v0.4.0-rc.2) 下载 `NikonFirmwarePatch-v0.4.0-rc.2-toolkit.zip`，按其 `SHA256SUMS.txt` 核对后解压 | 预编译（无需编译器） |
+| **完整 Release 工具包**（推荐） | 从 [NFP Releases](https://github.com/XinmiaoZhao/NikonFirmwarePatch/releases/tag/v0.4.0) 下载 `NikonFirmwarePatch-v0.4.0-toolkit.zip`，按其 `SHA256SUMS.txt` 核对后解压 | 预编译（无需编译器） |
 | Git 克隆 | `git clone https://github.com/XinmiaoZhao/NikonFirmwarePatch` | 源码编译（**需要 clang**，且编译器版本须与上游审阅配方一致——上游锁定 Apple clang 21.0.0 字节；CLT 自动升级会导致 `Compiled symbols differ` 失败） |
 
 官方原厂固件 `Z_8_0311.bin` 须自行从 Nikon 下载（SHA-256 `d67413c2ede6b9ce8887175f20700bd9fbad2a973a4820968c45503d15d80d96`），见 [NFP README 的下载指引](https://github.com/XinmiaoZhao/NikonFirmwarePatch#获取原厂固件)。

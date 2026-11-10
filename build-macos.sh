@@ -4,9 +4,9 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-VENDOR="${NFP_VENDOR_DIR:-$HOME/git/NikonFirmwarePatch-toolkit-v0.4.0-rc.2}"
-ZIP_URL='https://github.com/XinmiaoZhao/NikonFirmwarePatch/releases/download/v0.4.0-rc.2/NikonFirmwarePatch-v0.4.0-rc.2-toolkit.zip'
-ZIP_SHA='9a00183b54ee80e02e89445a59f5806a1e738ea22e2400538221ca27c21d9b4c'
+VENDOR="${NFP_VENDOR_DIR:-$HOME/git/NikonFirmwarePatch-toolkit-v0.4.0}"
+ZIP_URL='https://github.com/XinmiaoZhao/NikonFirmwarePatch/releases/download/v0.4.0/NikonFirmwarePatch-v0.4.0-toolkit.zip'
+ZIP_SHA='82e82f18114710775b378668d0822616fc570a97e6489c04b0bf018744f574b1'
 
 if [ ! -f "$VENDOR/patch.py" ]; then
   echo "-- vendoring toolkit from Release ZIP (SHA-256 checked) --"
@@ -14,7 +14,7 @@ if [ ! -f "$VENDOR/patch.py" ]; then
   curl -sL -o vendor/nfp-toolkit.zip "$ZIP_URL"
   echo "$ZIP_SHA  vendor/nfp-toolkit.zip" | shasum -a 256 -c -
   unzip -q vendor/nfp-toolkit.zip -d vendor
-  VENDOR="$PWD/vendor/NikonFirmwarePatch-v0.4.0-rc.2"
+  VENDOR="$PWD/vendor/NikonFirmwarePatch-v0.4.0"
 fi
 export NFP_VENDOR_DIR="$VENDOR"
 

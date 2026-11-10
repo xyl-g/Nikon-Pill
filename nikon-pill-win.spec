@@ -4,7 +4,7 @@ import os
 import shutil
 from pathlib import Path
 
-VENDOR = Path(os.environ.get('NFP_VENDOR_DIR', Path.home() / 'git' / 'NikonFirmwarePatch-toolkit-v0.4.0-rc.2'))
+VENDOR = Path(os.environ.get('NFP_VENDOR_DIR', Path.home() / 'git' / 'NikonFirmwarePatch-toolkit-v0.4.0'))
 if not (VENDOR / 'patch.py').is_file():
     raise SystemExit(f'NFP toolkit not found at {VENDOR}; set NFP_VENDOR_DIR')
 

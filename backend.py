@@ -252,7 +252,7 @@ def self_test():
     import argparse
     ap = argparse.ArgumentParser(description='backend self-test without the GUI')
     ap.add_argument('--kind', choices=['nfp', 'fenestra'], default='nfp')
-    ap.add_argument('--toolkit', default=str(Path.home() / 'git' / 'NikonFirmwarePatch-toolkit-v0.4.0-rc.2'))
+    ap.add_argument('--toolkit', default=str(Path.home() / 'git' / 'NikonFirmwarePatch-toolkit-v0.4.0'))
     ap.add_argument('--firmware', default=str(Path.home() / 'Downloads' / 'Z_8_0311.bin'))
     a = ap.parse_args()
     info = detect_toolkit(a.toolkit, kind=a.kind)

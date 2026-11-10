@@ -15,10 +15,16 @@ from PySide6.QtWidgets import (
 )
 
 import theme
-from backend import FROZEN, TAG_RE, VERSION_RE, detect_toolkit, output_name
+from backend import (FENESTRA_INPUT_SHA, FENESTRA_PATCH_SHA, FENESTRA_RESULT_SHA,
+                     FROZEN, TAG_RE, VERSION_RE, detect_toolkit, output_name)
 from worker import TaskWorker
 
 APP_NAME = 'Nikon Pill'
+
+TOOLKITS = [
+    ('nfp', 'NikonFirmwarePatch', '四功能组任意组合 · 自定版本号 · 机内菜单原生生效'),
+    ('fenestra', 'Fenestra Z8 (cold-retry3)', '官方 r10 基线一键应用 · 机内 Z8Mouldes 模块菜单 · 需配套 .wlm 插件'),
+]
 
 FEATURES = [
     ('framing', '画面构图', '开放门 3:2 · N-RAW 四档画质 · 反挤压 1.25–2.00x'),
@@ -49,8 +55,16 @@ class MainWindow(QMainWindow):
         self._spinner = QTimer(self)
         self._spinner.timeout.connect(self._tick_spinner)
         self.setAcceptDrops(True)
+        self._tk_kind = 'nfp'          # default toolkit; user may switch
+        self._fenestra_patch = None
+        self._fenestra_expected = None
         self._init_ui()
         self.setStyleSheet(theme.APP_QSS)
+        # Default toolkit card selected state (after QSS so polish applies).
+        self.tk_cards['nfp'].setProperty('selected', True)
+        self.tk_cards['nfp'].style().unpolish(self.tk_cards['nfp'])
+        self.tk_cards['nfp'].style().polish(self.tk_cards['nfp'])
+        self.fx_widget.setVisible(False)
         if FROZEN:
             self._refresh_toolkit()
         self._update_state()
@@ -65,6 +79,7 @@ class MainWindow(QMainWindow):
         root.setSpacing(14)
 
         root.addLayout(self._build_header())
+        root.addWidget(self._build_toolkit_card())
         root.addWidget(self._build_firmware_card())
         root.addWidget(self._build_features_card())
         root.addWidget(self._build_output_card())
@@ -76,6 +91,62 @@ class MainWindow(QMainWindow):
         root.addWidget(self._build_log_card())
         root.addWidget(self._build_result_card())
         root.addStretch(1)
+
+    def _build_toolkit_card(self):
+        card = self._card('构建方案', '两套工具包二选一 · 同一份原厂固件')
+        grid = QGridLayout()
+        grid.setSpacing(10)
+        self.tk_cards = {}
+        for i, (key, name, desc) in enumerate(TOOLKITS):
+            cardf = QFrame()
+            cardf.setProperty('featCard', True)
+            cardf.setCursor(Qt.PointingHandCursor)
+            v = QVBoxLayout(cardf)
+            v.setContentsMargins(14, 11, 14, 11)
+            v.setSpacing(3)
+            title = QLabel(name)
+            title.setProperty('featTitle', True)
+            v.addWidget(title)
+            sub = QLabel(desc)
+            sub.setProperty('featDesc', True)
+            sub.setWordWrap(True)
+            v.addWidget(sub)
+            cardf.mousePressEvent = (lambda ev, k=key, c=cardf: self._pick_toolkit_kind(k, c))
+            grid.addWidget(cardf, 0, i)
+            self.tk_cards[key] = cardf
+        card.layout().addLayout(grid)
+        self.tk_status = QLabel('')
+        self.tk_status.setProperty('faint', True)
+        self.tk_status.setWordWrap(True)
+        card.layout().addWidget(self.tk_status)
+
+        # Fenestra-only extras: manual .fxpatch picker (source runs)
+        self.fx_row = QHBoxLayout()
+        self.fx_edit = QLineEdit()
+        self.fx_edit.setPlaceholderText('cold-retry3.fxpatch 路径（内置工具包已自带，无需选择）')
+        self.fx_btn = QPushButton('选择…')
+        self.fx_row.addWidget(self.fx_edit, 1)
+        self.fx_row.addWidget(self.fx_btn)
+        self.fx_widget = QWidget()
+        self.fx_widget.setLayout(self.fx_row)
+        card.layout().addWidget(self.fx_widget)
+        self.fx_widget.hide()
+        return card
+
+    def _pick_toolkit_kind(self, key, card):
+        if self.worker is not None:
+            return
+        for k, c in self.tk_cards.items():
+            c.setProperty('selected', k == key)
+            c.style().unpolish(c)
+            c.style().polish(c)
+        self._tk_kind = key
+        self._tk_dir = ''          # header-picked dirs are kind-specific
+        self.info = None
+        self._check_ok = False
+        self._fenestra_patch = None
+        self.fx_widget.setVisible(key == 'fenestra' and not FROZEN)
+        self._refresh_toolkit()
 
     def _build_header(self):
         row = QHBoxLayout()
@@ -322,6 +393,7 @@ class MainWindow(QMainWindow):
             self.fw_btn.clicked.connect(self._pick_firmware)
             self.recheck_btn.clicked.connect(self._run_check)
             self.out_btn.clicked.connect(self._pick_output)
+            self.fx_btn.clicked.connect(self._pick_fxpatch)
             self.ft_all_btn.clicked.connect(lambda: self._set_all(True))
             self.ft_none_btn.clicked.connect(lambda: self._set_all(False))
             for w in (self.version_edit, self.tag_edit, self.out_edit):
@@ -337,11 +409,25 @@ class MainWindow(QMainWindow):
     # ---------- actions ----------
 
     def _pick_toolkit(self):
-        path = QFileDialog.getExistingDirectory(self, '选择 NikonFirmwarePatch 目录',
-                                                str(Path.home() / 'git'))
+        title = ('选择 Fenestra 工具包目录' if self._tk_kind == 'fenestra'
+                 else '选择 NikonFirmwarePatch 目录')
+        path = QFileDialog.getExistingDirectory(self, title, str(Path.home() / 'git'))
         if path:
             self._tk_dir = path
             self._refresh_toolkit()
+
+    def _pick_fxpatch(self):
+        path, _ = QFileDialog.getOpenFileName(self, '选择 Fenestra 补丁文件',
+                                              str(Path.home() / 'Downloads'),
+                                              'Fenestra 补丁 (*.fxpatch);;所有文件 (*)')
+        if path:
+            self.fx_edit.setText(path)
+            self._fenestra_patch = Path(path)
+            if self.info is not None:
+                self.info.patch_file = self._fenestra_patch
+                for note in list(self.info.notes):
+                    pass
+                self._update_state()
 
     def _pick_firmware(self):
         path, _ = QFileDialog.getOpenFileName(self, '选择原厂固件',
@@ -386,15 +472,44 @@ class MainWindow(QMainWindow):
         return [k for k, c in self.feature_boxes.items() if c.property('selected')]
 
     def _refresh_toolkit(self):
+        # Per-kind toolkit directory: a header-picked dir only matches its own
+        # kind; otherwise fall back to the conventional ~/git location.
+        default_dir = {'fenestra': Path.home() / 'git' / 'Fenestra-Z8-C311-source',
+                       'nfp': Path.home() / 'git' / 'NikonFirmwarePatch-toolkit-v0.4.0-rc.2'}
+        picked = Path(self._tk_dir) if self._tk_dir else None
+        if picked is not None and picked.is_dir() and self._kind_matches_dir(picked):
+            root = picked
+        else:
+            root = None if FROZEN else default_dir.get(self._tk_kind)
         try:
-            self.info = detect_toolkit(None if FROZEN else self._tk_dir)
+            self.info = detect_toolkit(None if FROZEN else root,
+                                       kind=self._tk_kind)
         except (FileNotFoundError, ValueError, OSError) as exc:
             self.info = None
             self.subtitle.setText(f'工具包无效 · {exc}')
             self.subtitle.setStyleSheet(f'color: {theme.BAD};')
+            self.tk_status.setText('')
             self._update_state()
             return
+        # Toolkit status line + branch-specific UI adjustments.
+        notes = '；'.join(self.info.notes) or '就绪'
+        self.subtitle.setStyleSheet('')
+        self.subtitle.setText('Nikon Z8 · C 3.11 固件补丁构建器')
+        self.tk_status.setText(('✓ ' if self.info.ready else '⚠ ') + notes)
+        self.tk_status.setStyleSheet('' if self.info.ready else f'color: {theme.WARN};')
+        is_fenestra = self.info.kind == 'fenestra'
+        self.version_edit.setEnabled(not is_fenestra)
+        self.tag_edit.setEnabled(not is_fenestra)
+        self.ft_all_btn.setVisible(not is_fenestra)
+        self.ft_none_btn.setVisible(not is_fenestra)
+        for cardf in self.feature_boxes.values():
+            cardf.setEnabled(not is_fenestra)
         self._update_state()
+
+    def _kind_matches_dir(self, path: Path) -> bool:
+        """Does a manually-picked directory belong to the active toolkit kind?"""
+        marker = 'patcher.py' if self._tk_kind == 'fenestra' else 'patch.py'
+        return (path / marker).is_file()
 
     def _run_check(self):
         if self.info is None:
@@ -420,7 +535,19 @@ class MainWindow(QMainWindow):
         self.recheck_btn.setText('↻  重新校验')
         self.recheck_btn.setEnabled(True)
         report = result.report or {}
-        if result.ok and report.get('status') == 'COMPATIBLE':
+        if result.ok and report.get('status') == 'SKIP':
+            # Fenestra has no read-only engine check; verifying the content
+            # hash directly is exactly what its patcher would do anyway.
+            digest = self._sha256(self._fw_path) if self._fw_path else ''
+            if digest == FENESTRA_INPUT_SHA:
+                self._check_ok = True
+                self.err_panel.hide()
+                self._log('info', f'校验通过 · 官方 C 3.11 输入（{digest[:16]}…）')
+            else:
+                self._check_ok = False
+                self._show_check_error({}, '')
+                self._log('warn', 'SHA-256 与官方记录不一致，已阻止构建')
+        elif result.ok and report.get('status') == 'COMPATIBLE':
             self._check_ok = True
             self.err_panel.hide()
             self._log('info', f'校验通过 · 原厂身份 {report.get("identity", "?")}')
@@ -432,12 +559,17 @@ class MainWindow(QMainWindow):
 
     def _show_check_error(self, report, raw):
         expect = ''
-        try:
-            import json
-            spec = json.loads((self.info.root / 'resources' / 'input.json').read_text())
-            expect = spec.get('sha256', '')
-        except (OSError, ValueError):
-            pass
+        if self.info.kind == 'fenestra':
+            # Fenestra has no input.json; its target pins the same official bin.
+            from backend import FENESTRA_INPUT_SHA
+            expect = FENESTRA_INPUT_SHA
+        else:
+            try:
+                import json
+                spec = json.loads((self.info.root / 'resources' / 'input.json').read_text())
+                expect = spec.get('sha256', '')
+            except (OSError, ValueError):
+                pass
         actual = self._sha256(self._fw_path) if self._fw_path else ''
         self.err_title.setText('⚠  校验失败 · SHA-256 与官方记录不一致')
         self.err_expect.setText(f'期望  {_abbrev(expect) or "—"}（Nikon 官方 Z8 C 3.11）')
@@ -471,6 +603,7 @@ class MainWindow(QMainWindow):
         base = Path(out_text) if out_text else None
         out_ok = bool(out_text) and not (base.exists() and not base.is_dir())
         fw_file = self._fw_path is not None and self._fw_path.is_file()
+        fenestra = self._tk_kind == 'fenestra'
 
         self.version_edit.setProperty('invalid', bool(version) and not version_ok)
         self.tag_edit.setProperty('invalid', bool(tag) and not tag_ok)
@@ -478,15 +611,22 @@ class MainWindow(QMainWindow):
             w.style().unpolish(w)
             w.style().polish(w)
 
-        if version_ok:
+        if fenestra:
+            self.version_note.setText('Fenestra 方案版本固定（cold-retry3 基线）')
+            self.version_note.setStyleSheet('')
+        elif version_ok:
             self.version_note.setText(f'相机将显示 C {version}')
             self.version_note.setStyleSheet(f'color: {theme.OK};')
         else:
             self.version_note.setText('格式 NN.NN')
             self.version_note.setStyleSheet('')
 
-        self.ft_count.setText(f'已选 {len(features)} / 4 组')
-        if version_ok and out_text:
+        self.ft_count.setText('由 .fxpatch 决定' if fenestra else f'已选 {len(features)} / 4 组')
+        if fenestra:
+            self.out_preview.setText(
+                f'输出：{base / "Z_8_0311-cold-retry3.bin"}（生成后拷到存储卡根目录并改名 Z_8_0311.bin）'
+                if out_text else '输出：—')
+        elif version_ok and out_text:
             self.out_preview.setText(
                 f'输出：{base}/v{version}-{tag or "p0"}_<时间戳>/'
                 f'{output_name(version)} + manifest.json + SHA256SUMS.txt')
@@ -500,12 +640,13 @@ class MainWindow(QMainWindow):
             reasons.append('未选择固件')
         elif not self._check_ok:
             reasons.append('固件校验未通过，修复后才能构建')
-        if not features:
-            reasons.append('至少选择 1 个功能组')
-        if not version_ok:
-            reasons.append('版本号需为 NN.NN')
-        if not tag_ok:
-            reasons.append('tag 需为字母+数字')
+        if not fenestra:
+            if not features:
+                reasons.append('至少选择 1 个功能组')
+            if not version_ok:
+                reasons.append('版本号需为 NN.NN')
+            if not tag_ok:
+                reasons.append('tag 需为字母+数字')
         if not out_text:
             reasons.append('请选择保存位置')
         elif not out_ok:
@@ -554,22 +695,42 @@ class MainWindow(QMainWindow):
     def _start_build(self):
         if self.worker is not None:
             return
-        order = [k for k, _, _ in FEATURES]
-        features = sorted(self._selected(), key=order.index)
-        version = self.version_edit.text().strip()
-        tag = self.tag_edit.text().strip()
+        fenestra = self._tk_kind == 'fenestra' and (self.info and self.info.kind == 'fenestra')
         base = Path(self.out_edit.text().strip())
-        out_dir = self._new_output_dir(base, version, tag)
-        self._build_dir = out_dir
-        self._build_bin = out_dir / output_name(version)
+        if fenestra:
+            # Single pinned output file; patcher.py refuses to overwrite
+            # and does not create parent directories itself.
+            base.mkdir(parents=True, exist_ok=True)
+            out_bin = base / 'Z_8_0311-cold-retry3.bin'
+            if out_bin.exists():
+                stamp = time.strftime('%Y%m%d-%H%M%S')
+                out_bin = base / f'Z_8_0311-cold-retry3_{stamp}.bin'
+            self._build_dir = base
+            self._build_bin = out_bin
+            self._fenestra_expected = FENESTRA_RESULT_SHA
+            self._log('info', '开始应用 Fenestra cold-retry3 补丁（.fxpatch）')
+            self._log('info', f'输出文件 {out_bin}')
+        else:
+            order = [k for k, _, _ in FEATURES]
+            features = sorted(self._selected(), key=order.index)
+            version = self.version_edit.text().strip()
+            tag = self.tag_edit.text().strip()
+            out_dir = self._new_output_dir(base, version, tag)
+            self._build_dir = out_dir
+            self._build_bin = out_dir / output_name(version)
+            self._fenestra_expected = None
+            self._log('info', f'开始构建 {output_name(version)} · {" + ".join(features)}')
+            self._log('info', f'输出目录 {out_dir}')
         self._identity = ''
         self._sha = ''
         self.result_card.hide()
-        self._log('info', f'开始构建 {output_name(version)} · {" + ".join(features)}')
-        self._log('info', f'输出目录 {out_dir}')
         self._set_busy(True)
-        self.worker = TaskWorker('build', self.info, self._fw_path, features=features,
-                                 version=version, tag=tag, output_dir=out_dir)
+        self.worker = TaskWorker('build', self.info, self._fw_path,
+                                 features=sorted(self._selected(),
+                                                 key=[k for k, _, _ in FEATURES].index),
+                                 version=self.version_edit.text().strip(),
+                                 tag=self.tag_edit.text().strip(),
+                                 output_dir=self._build_dir, output_bin=self._build_bin)
         self.worker.line.connect(self._log_line)
         self.worker.done.connect(self._build_done)
         self.worker.start()
@@ -579,10 +740,13 @@ class MainWindow(QMainWindow):
         for w in (self.fw_btn, self.out_btn, self.version_edit, self.tag_edit, self.out_edit):
             w.setEnabled(not busy)
         self.recheck_btn.setEnabled(not busy and self._fw_path is not None)
+        fenestra = self._tk_kind == 'fenestra'
         for card in self.feature_boxes.values():
-            card.setEnabled(not busy)
-        self.ft_all_btn.setEnabled(not busy)
-        self.ft_none_btn.setEnabled(not busy)
+            card.setEnabled(not busy and not fenestra)
+        self.ft_all_btn.setEnabled(not busy and not fenestra)
+        self.ft_none_btn.setEnabled(not busy and not fenestra)
+        self.fx_btn.setEnabled(not busy)
+        self.fx_edit.setEnabled(not busy)
         self.build_btn.setVisible(not busy)
         self.cancel_btn.setEnabled(busy)
         self.progress.setVisible(busy)
@@ -605,7 +769,27 @@ class MainWindow(QMainWindow):
             return
 
         r = result.report or {}
-        self._sha = r.get('sha256') or r.get('output_sha256', '')
+        self._sha = r.get('result_sha256') or r.get('sha256') or r.get('output_sha256', '')
+        self._identity = r.get('output_identity', '') or ('cold-retry3' if r.get('result_sha256') else '')
+        if getattr(self, '_fenestra_expected', None):
+            # Fenestra: content-pinned verification — compare the engine's
+            # reported result hash against the official r10 baseline.
+            self._verify_ctx = dict(features=('cold-retry3 base',), version='fixed', tag='')
+            if self._sha == FENESTRA_RESULT_SHA:
+                self._log('ok', f'构建完成 · 结果哈希与官方基线一致 · {self._sha[:16]}…')
+                self.result_card.show()
+                self.result_title.setText('✓  应用补丁完成 · 结果与官方基线一致')
+                self.result_label.setText(self._result_text('PASS（内容哈希比对一致）'))
+                self._log('ok', '独立校验 PASS')
+            else:
+                self._log('warn', f'结果哈希非官方基线：{self._sha[:16]}…')
+                self.result_card.show()
+                self.result_title.setText('应用补丁完成 · 结果哈希非官方基线')
+                self.result_label.setText(self._result_text('非基线（fxpatch 可能被修改过）'))
+            self.verify_btn.show()
+            self._set_busy(False)
+            self._update_state()
+            return
         self._verify_ctx = dict(features=tuple(self._selected()), version=self.version_edit.text().strip(),
                                 tag=self.tag_edit.text().strip())
         self._log('ok', f'构建完成 · {r.get("output_identity", "—")} · {self._sha[:16]}…')

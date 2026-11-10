@@ -1,0 +1,78 @@
+{
+  "schema": "fenestra.z8-diag-bindings/v1",
+  "target": "z8-c311",
+  "application": {
+    "base": null,
+    "bytes": 81807709,
+    "sha256": "2b43a31c9de838f84b12416de4348a7004e65be07f853ec56ec2b10f3a8e3853"
+  },
+  "code": {
+    "begin": null,
+    "end": null
+  },
+  "ram": {
+    "begin": null,
+    "end": null
+  },
+  "native": {
+    "allocate": null,
+    "task_create": null,
+    "task_resume": null,
+    "task_delay": null,
+    "ptp_payload": null,
+    "ptp_capacity": null,
+    "ptp_incoming": null,
+    "ptp_response": null,
+    "ptp_send": null
+  },
+  "data": {
+    "page_roots": null,
+    "ptp_session": null,
+    "ptp_operations": null,
+    "ptp_operations_capacity": null
+  },
+  "anchor": {
+    "group": null,
+    "id": null,
+    "descriptor": null,
+    "descriptor_bytes": null,
+    "page_size": 96,
+    "descriptor_offset": 80
+  },
+  "events": {
+    "message_id_offset": null,
+    "startup_complete": null,
+    "shutdown": null
+  },
+  "allocate_pool": null,
+  "task": {
+    "attributes": null,
+    "priority": null,
+    "processor": null,
+    "affinity": null,
+    "stack_bytes": null,
+    "delay_ticks": null
+  },
+  "hooks": {
+    "startup": {
+      "address": null,
+      "original": null,
+      "continuation": null
+    },
+    "ptp_lookup": {
+      "address": null,
+      "original": null,
+      "continuation": null
+    },
+    "ptp_session": {
+      "address": null,
+      "original": null,
+      "continuation": null
+    },
+    "ptp_operations": {
+      "address": null,
+      "original": null,
+      "continuation": null
+    }
+  }
+}

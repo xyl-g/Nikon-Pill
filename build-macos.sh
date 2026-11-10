@@ -18,6 +18,22 @@ if [ ! -f "$VENDOR/patch.py" ]; then
 fi
 export NFP_VENDOR_DIR="$VENDOR"
 
+# Fenestra toolkit (stdlib-only patcher + pinned cold-retry3.fxpatch).
+FENESTRA="${FENESTRA_VENDOR_DIR:-$HOME/git/Fenestra-Z8-C311-source}"
+FX_URL='https://github.com/PIPA12344/Fenestra-Z8-C311-source/releases/download/wlm-2026.11.10-r10/cold-retry3.fxpatch'
+FX_SHA='395b05e5db84c464e6cb44b178623cf5d237cd9aef5d8ed9ad0b8cfc244758a1'
+if [ ! -f "$FENESTRA/patcher.py" ]; then
+  echo "-- vendoring Fenestra (cold-retry3-source branch) --"
+  git clone --depth 1 --branch cold-retry3-source \
+    https://github.com/PIPA12344/Fenestra-Z8-C311-source.git "$FENESTRA"
+fi
+if [ ! -f "$FENESTRA/cold-retry3.fxpatch" ]; then
+  echo "-- downloading cold-retry3.fxpatch (SHA-256 checked) --"
+  curl -sL -o "$FENESTRA/cold-retry3.fxpatch" "$FX_URL"
+  echo "$FX_SHA  $FENESTRA/cold-retry3.fxpatch" | shasum -a 256 -c -
+fi
+export FENESTRA_VENDOR_DIR="$FENESTRA"
+
 # Homebrew/conda Pythons are externally managed: build in a dedicated venv.
 PY="$PWD/.venv-build/bin/python"
 if [ ! -x "$PY" ]; then

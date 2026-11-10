@@ -9,15 +9,26 @@ VENDOR = Path(os.environ.get('NFP_VENDOR_DIR', Path.home() / 'git' / 'NikonFirmw
 if not (VENDOR / 'patch.py').is_file():
     raise SystemExit(f'NFP toolkit not found at {VENDOR}; set NFP_VENDOR_DIR')
 
-# Copy the toolkit to a staging dir and drop pieces the engine never reads
-# (luts/ = post-production LUTs for editors, docs/ = markdown guides; both
-# referenced only by README/release-manifest, ~14 MB combined).
+FENESTRA = Path(os.environ.get('FENESTRA_VENDOR_DIR', Path.home() / 'git' / 'Fenestra-Z8-C311-source'))
+if not (FENESTRA / 'patcher.py').is_file():
+    raise SystemExit(f'Fenestra toolkit not found at {FENESTRA}; set FENESTRA_VENDOR_DIR')
+
+# Copy the toolkits to staging dirs and drop pieces the engines never read
+# (NFP luts/docs are post-production extras; Fenestra emulation/host/test
+# trees are not needed for patcher.py, which is stdlib-only).
 STAGE = Path('_nfp_stage')
 if STAGE.exists():
     shutil.rmtree(STAGE)
 shutil.copytree(VENDOR, STAGE,
                 ignore=shutil.ignore_patterns('luts', 'docs', '.git', '__pycache__'))
-datas = [(str(STAGE), 'nfp')]
+FEN_STAGE = Path('_fenestra_stage')
+if FEN_STAGE.exists():
+    shutil.rmtree(FEN_STAGE)
+shutil.copytree(FENESTRA, FEN_STAGE,
+                ignore=shutil.ignore_patterns(
+                    'emulation', 'linux', 'tests', 'docs', '.git', '__pycache__',
+                    'Start-Z8-Debug.cmd', '启动Z8调试工作台.cmd', '*.pyw'))
+datas = [(str(STAGE), 'nfp'), (str(FEN_STAGE), 'fenestra')]
 
 # Unused PySide6 modules: this is a plain QWidget app — no QML/Quick stack,
 # no PDF viewer, no network/GL/SVG/DBus/keyboard input contexts.

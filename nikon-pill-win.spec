@@ -8,12 +8,23 @@ VENDOR = Path(os.environ.get('NFP_VENDOR_DIR', Path.home() / 'git' / 'NikonFirmw
 if not (VENDOR / 'patch.py').is_file():
     raise SystemExit(f'NFP toolkit not found at {VENDOR}; set NFP_VENDOR_DIR')
 
-# Same trim as the macOS spec: engine never reads luts/ or docs/.
+FENESTRA = Path(os.environ.get('FENESTRA_VENDOR_DIR', Path.home() / 'git' / 'Fenestra-Z8-C311-source'))
+if not (FENESTRA / 'patcher.py').is_file():
+    raise SystemExit(f'Fenestra toolkit not found at {FENESTRA}; set FENESTRA_VENDOR_DIR')
+
+# Same trim as the macOS spec.
 STAGE = Path('_nfp_stage')
 if STAGE.exists():
     shutil.rmtree(STAGE)
 shutil.copytree(VENDOR, STAGE,
                 ignore=shutil.ignore_patterns('luts', 'docs', '.git', '__pycache__'))
+FEN_STAGE = Path('_fenestra_stage')
+if FEN_STAGE.exists():
+    shutil.rmtree(FEN_STAGE)
+shutil.copytree(FENESTRA, FEN_STAGE,
+                ignore=shutil.ignore_patterns(
+                    'emulation', 'linux', 'tests', 'docs', '.git', '__pycache__',
+                    'Start-Z8-Debug.cmd', '启动Z8调试工作台.cmd', '*.pyw'))
 
 QT_EXCLUDES = [
     'PySide6.QtQuick', 'PySide6.QtQml', 'PySide6.QtQmlMeta', 'PySide6.QtQmlModels',
@@ -36,7 +47,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[(str(STAGE), 'nfp')],
+    datas=[(str(STAGE), 'nfp'), (str(FEN_STAGE), 'fenestra')],
     hiddenimports=['backend', 'worker', 'ui', 'capstone'],
     excludes=['tkinter', 'matplotlib', 'numpy', 'pytest', *QT_EXCLUDES],
     noarchive=False,

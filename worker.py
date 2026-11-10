@@ -1,4 +1,4 @@
-"""QThread workers running patch.py/verify.py off the UI thread."""
+"""QThread workers running the chosen toolkit's engine off the UI thread."""
 import os
 import subprocess
 from dataclasses import dataclass
@@ -12,14 +12,14 @@ from backend import (ToolkitInfo, build_cmd, check_cmd, parse_tail_json,
 @dataclass
 class CheckResult:
     ok: bool
-    report: dict          # parsed --check JSON, or {}
+    report: dict
     raw: str
 
 
 @dataclass
 class BuildResult:
     ok: bool
-    report: dict          # final build JSON printed by patch.py
+    report: dict
     raw: str
 
 
@@ -57,8 +57,6 @@ class TaskWorker(QThread):
         if self._proc is not None and self._proc.poll() is None:
             try:
                 if os.name == 'nt':
-                    # terminate() only kills the direct child; the engine may
-                    # still be re-running itself, so drop the whole tree.
                     subprocess.run(['taskkill', '/T', '/F', '/PID', str(self._proc.pid)],
                                    capture_output=True)
                 else:
@@ -67,14 +65,22 @@ class TaskWorker(QThread):
                 pass
 
     def run(self):
+        cmd = None
         if self.kind == 'check':
             cmd = check_cmd(self.info, self.firmware)
+            if cmd is None:      # fenestra: no read-only check in patcher.py
+                self.done.emit(CheckResult(ok=True, report={'status': 'SKIP'}, raw=''))
+                return
         elif self.kind == 'build':
             cmd = build_cmd(self.info, self.firmware, self.features,
-                            self.version, self.tag, self.output_dir)
+                            self.version, self.tag, self.output_dir,
+                            output_bin=self.output_bin)
         else:
             cmd = verify_cmd(self.info, self.firmware, self.output_bin,
                              self.features, self.version, self.tag)
+            if cmd is None:      # fenestra: verification is content-hash based
+                self.done.emit(VerifyResult(ok=True, report={'status': 'SKIP'}, raw=''))
+                return
         try:
             kwargs = dict(stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
                           encoding='utf-8', errors='replace', bufsize=1)

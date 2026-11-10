@@ -20,6 +20,23 @@ if not exist "%VENDOR%\patch.py" (
 )
 set "NFP_VENDOR_DIR=%VENDOR%"
 
+REM Fenestra toolkit (stdlib-only patcher + pinned cold-retry3.fxpatch).
+set "FENESTRA=%FENESTRA_VENDOR_DIR%"
+if "%FENESTRA%"=="" set "FENESTRA=%USERPROFILE%\git\Fenestra-Z8-C311-source"
+set "FX_URL=https://github.com/PIPA12344/Fenestra-Z8-C311-source/releases/download/wlm-2026.11.10-r10/cold-retry3.fxpatch"
+set "FX_SHA=395b05e5db84c464e6cb44b178623cf5d237cd9aef5d8ed9ad0b8cfc244758a1"
+
+if not exist "%FENESTRA%\patcher.py" (
+  echo -- vendoring Fenestra (cold-retry3-source branch) --
+  git clone --depth 1 --branch cold-retry3-source https://github.com/PIPA12344/Fenestra-Z8-C311-source.git "%FENESTRA%"
+)
+if not exist "%FENESTRA%\cold-retry3.fxpatch" (
+  echo -- downloading cold-retry3.fxpatch --
+  curl -sL -o "%FENESTRA%\cold-retry3.fxpatch" "%FX_URL%"
+  certutil -hashfile "%FENESTRA%\cold-retry3.fxpatch" SHA256 | find /i "%FX_SHA%" >nul || (echo fxpatch SHA-256 mismatch & exit /b 1)
+)
+set "FENESTRA_VENDOR_DIR=%FENESTRA%"
+
 python -m pip install --quiet pyinstaller PySide6 capstone==5.0.7
 if exist build rmdir /s /q build
 if exist dist rmdir /s /q dist

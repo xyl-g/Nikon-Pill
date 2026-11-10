@@ -1,0 +1,188 @@
+{
+  "schema": "fenestra.z8-port/v1",
+  "target": "z8-c311",
+  "model": "Nikon Z8",
+  "version": "C 3.11",
+  "runtime_ready": false,
+  "base": "0x40160000",
+  "module_name": "eg2070_0311b0.bi",
+  "identities": {
+    "package": {
+      "bytes": 99051117,
+      "sha256": "d67413c2ede6b9ce8887175f20700bd9fbad2a973a4820968c45503d15d80d96"
+    },
+    "component": {
+      "bytes": 81807711,
+      "sha256": "f85e0138e2f5e660ece8560de62e0d12cb795e0e14983e50f20b61dce906c46c"
+    },
+    "application": {
+      "bytes": 81807709,
+      "sha256": "2b43a31c9de838f84b12416de4348a7004e65be07f853ec56ec2b10f3a8e3853"
+    }
+  },
+  "modules": [
+    {
+      "name": "ex2070_030000.bi",
+      "start": 208,
+      "bytes": 524290,
+      "sha256": "4b7ea2ea40360717ceffd3d8db6fe48f5fae9d5c13b69632dc750bdc41b571c2"
+    },
+    {
+      "name": "_tpj01_0210.bin",
+      "start": 524498,
+      "bytes": 57346,
+      "sha256": "689f80feb0d271d73ac719e0c5872cfc0dac643097e528b6a1b156d4c55efe1a"
+    },
+    {
+      "name": "eg2070_0311b0.bi",
+      "start": 581844,
+      "bytes": 81807711,
+      "sha256": "f85e0138e2f5e660ece8560de62e0d12cb795e0e14983e50f20b61dce906c46c"
+    },
+    {
+      "name": "vr2070_010100.bi",
+      "start": 82389555,
+      "bytes": 838664,
+      "sha256": "30e363077655f9936894fdc00104263eac4a33892e621199f84bf8f4cecea3bb"
+    },
+    {
+      "name": "li2070_0311b0.bi",
+      "start": 83228219,
+      "bytes": 15822850,
+      "sha256": "804a55508cd6b323336fbba14034810e4b22fcc5fd1030d3a7dc08d62767cc55"
+    }
+  ],
+  "external_reader": {
+    "relative_path": "z8prores/package.py",
+    "sha256": "2f24ea0214ca7e8bae044f91a4ba2980bc4e6471bb47b75d5afe1bdfcc42cd29",
+    "license": "GPL-3.0-only (separate container-tool dependency)",
+    "interface": "Package(raw).eg and Package(raw).modules",
+    "source": "NikonFirmwarePatch-v0.3.0-r1; optional operator-selected local dependency",
+    "scope": "Read-only decode/inspection only; no replacement or repacking API is invoked."
+  },
+  "bindings": [
+    {
+      "name": "rtos.memory.allocate",
+      "address": "0x40d2c408",
+      "signature": "void *(uint32_t bytes, uint32_t pool)",
+      "source": "z8pixelshift/src/firmware.c:18",
+      "verification": "original bytes observed locally; ABI recovered by existing Z8 source, not newly proved by this tool",
+      "runtime_qualified": false,
+      "fingerprint_bytes": 16,
+      "fingerprint_sha256": "3496d89b20f06d705ad7d71f4bb792ec35c5336b5d61ad7d97a32d50a6e41e24"
+    },
+    {
+      "name": "rtos.memory.release",
+      "address": "0x40d2c448",
+      "signature": "void(void *pointer)",
+      "source": "z8pixelshift/src/firmware.c:19",
+      "verification": "original bytes observed locally; ABI recovered by existing Z8 source, not newly proved by this tool",
+      "runtime_qualified": false,
+      "fingerprint_bytes": 16,
+      "fingerprint_sha256": "bb2353fac41540ad8f64239da141468620deff2b1344af333fbd44c776fce76b"
+    },
+    {
+      "name": "camera.card.open",
+      "address": "0x402daa4c",
+      "signature": "int(const char *path, uint32_t flags, uint32_t mode)",
+      "source": "z8pixelshift/src/firmware.c:7",
+      "verification": "original bytes observed locally; ABI recovered by existing Z8 source, not newly proved by this tool",
+      "runtime_qualified": false,
+      "fingerprint_bytes": 16,
+      "fingerprint_sha256": "9e7b8f84aec6013a8aba2da6ecf2ff124203535bc66f418f772e28ef0325a691"
+    },
+    {
+      "name": "camera.card.close",
+      "address": "0x402daaac",
+      "signature": "int(int fd)",
+      "source": "z8pixelshift/src/firmware.c:8",
+      "verification": "original bytes observed locally; ABI recovered by existing Z8 source, not newly proved by this tool",
+      "runtime_qualified": false,
+      "fingerprint_bytes": 16,
+      "fingerprint_sha256": "9dbe7d9aa19b52d3f22bca5be65b0ae00ea12afcb2aec661be01b6d4b8e1e989"
+    },
+    {
+      "name": "camera.card.read",
+      "address": "0x402dab4c",
+      "signature": "int(int fd, void *data, uint32_t bytes, uint32_t *actual)",
+      "source": "z8pixelshift/src/firmware.c:9",
+      "verification": "original bytes observed locally; ABI recovered by existing Z8 source, not newly proved by this tool",
+      "runtime_qualified": false,
+      "fingerprint_bytes": 16,
+      "fingerprint_sha256": "e93a74ad32aa2c13e49701d00f052ba70d8a894ad24e4b058f5a1938425fd77b"
+    },
+    {
+      "name": "camera.card.write",
+      "address": "0x402dabb8",
+      "signature": "int(int fd, uintptr_t data, uint32_t bytes, uint32_t *actual)",
+      "source": "z8pixelshift/src/firmware.c:10",
+      "verification": "original bytes observed locally; ABI recovered by existing Z8 source, not newly proved by this tool",
+      "runtime_qualified": false,
+      "fingerprint_bytes": 16,
+      "fingerprint_sha256": "e93a74ad32aa2c13e49701d00f052ba70d8a894ad24e4b058f5a1938425fd77b"
+    },
+    {
+      "name": "camera.card.seek32",
+      "address": "0x402dac24",
+      "signature": "int(int fd, uint32_t offset, uint32_t whence, uint32_t *actual)",
+      "source": "z8pixelshift/src/firmware.c:11",
+      "verification": "original bytes observed locally; ABI recovered by existing Z8 source, not newly proved by this tool",
+      "runtime_qualified": false,
+      "fingerprint_bytes": 16,
+      "fingerprint_sha256": "e93a74ad32aa2c13e49701d00f052ba70d8a894ad24e4b058f5a1938425fd77b"
+    },
+    {
+      "name": "camera.card.create",
+      "address": "0x402dad04",
+      "signature": "int(const char *path, uint32_t mode)",
+      "source": "z8pixelshift/src/firmware.c:12",
+      "verification": "original bytes observed locally; ABI recovered by existing Z8 source, not newly proved by this tool",
+      "runtime_qualified": false,
+      "fingerprint_bytes": 16,
+      "fingerprint_sha256": "7b347c3979d48e4e5b9643d8e39abde76ccc9dfedec02e1e9f96c959df1049f5"
+    },
+    {
+      "name": "camera.card.rename",
+      "address": "0x402dad58",
+      "signature": "int(const char *from, const char *to)",
+      "source": "z8pixelshift/src/firmware.c:13",
+      "verification": "original bytes observed locally; ABI recovered by existing Z8 source, not newly proved by this tool",
+      "runtime_qualified": false,
+      "fingerprint_bytes": 16,
+      "fingerprint_sha256": "4b89f0587937e88a69de42916aebb1b3f7e3ae5e56e71811c270fc6bb8be7e3d"
+    },
+    {
+      "name": "camera.card.remove",
+      "address": "0x402dada8",
+      "signature": "int(const char *path)",
+      "source": "z8pixelshift/src/firmware.c:17",
+      "verification": "original bytes observed locally; ABI recovered by existing Z8 source, not newly proved by this tool",
+      "runtime_qualified": false,
+      "fingerprint_bytes": 16,
+      "fingerprint_sha256": "870491b568715ba6963e7ca9417c212c33d88a8280a3a0d5ef2899f44fb4e846"
+    },
+    {
+      "name": "camera.card.exists",
+      "address": "0x402db1ac",
+      "signature": "int(const char *path)",
+      "source": "z8pixelshift/src/firmware.c:14",
+      "verification": "original bytes observed locally; ABI recovered by existing Z8 source, not newly proved by this tool",
+      "runtime_qualified": false,
+      "fingerprint_bytes": 16,
+      "fingerprint_sha256": "870491b568715ba6963e7ca9417c212c33d88a8280a3a0d5ef2899f44fb4e846"
+    }
+  ],
+  "blockers": [
+    "Full native RTOS task ABI and lifecycle",
+    "PTP lookup/session/operations and USB buffers",
+    "MMU context and mapping/translation callable APIs",
+    "Startup/shutdown hooks and warm-start lifecycle",
+    "Full menu namespace, condition dispatcher ABI and editor/display bindings"
+  ],
+  "notes": [
+    "Package includes the encrypted update envelope; component includes its trailing CRC16; application excludes the two CRC bytes.",
+    "Bindings are an audited research subset. Exact byte fingerprints are not proof of ABI equivalence or hardware behavior.",
+    "No camera is accessed and no update/flashable package is produced.",
+    "Source references are provenance in the separate local research project, not a bundled dependency."
+  ]
+}

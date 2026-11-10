@@ -1,0 +1,22 @@
+build/
+private/
+inputs/
+__pycache__/
+*.pyc
+*.bin
+*.wlm
+*.fxpatch
+.venv/
+.workbench/
+# Delivery directories and release archives are build outputs, not source.
+dist/
+releases/*.zip
+
+# User-supplied local dependencies and native profiles
+/vendor/NikonFirmwarePatch-features/
+/host/data/card-native-c311*.json
+*.main
+*.elf
+*.img
+*.raw
+*.log

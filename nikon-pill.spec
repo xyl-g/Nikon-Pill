@@ -1,6 +1,8 @@
 # PyInstaller spec for Nikon Pill (macOS .app; Windows uses nikon-pill-win.spec
-# for a one-file console=False EXE). The NikonFirmwarePatch Release toolkit is
-# bundled as data under nfp/ and replayed in-process via the --nfp-engine flags.
+# for a one-file console=False EXE). Both toolkits are bundled as data —
+# nfp/ (NikonFirmwarePatch Release toolkit) and fenestra/ (2-file engine +
+# pinned fxpatch) — and replayed in-process via the --nfp-engine-* flags.
+# Qt is pruned to Core/Gui/Widgets (+ hard deps) to keep the bundle small.
 import os
 import shutil
 from pathlib import Path

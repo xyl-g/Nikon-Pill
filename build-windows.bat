@@ -1,6 +1,6 @@
 @echo off
 REM Build Nikon Pill one-file EXE on Windows.
-REM Prereqs: Python 3.10+ on PATH; the toolkit is auto-vendored.
+REM Auto-vendors both toolkits over HTTP (SHA-256 checked); no compiler needed.
 setlocal
 cd /d "%~dp0"
 

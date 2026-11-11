@@ -1,6 +1,9 @@
 #!/bin/zsh
 # Build Nikon Pill.app and a DMG on macOS.
-# Prereqs: python3, pip install pyinstaller; the toolkit is auto-vendored.
+# Auto-vendors both toolkits over HTTP with SHA-256 checks:
+#   NFP      = Release toolkit ZIP (~8 MB, 9 prebuilt patch units)
+#   Fenestra = 2 engine files + cold-retry3.fxpatch (~350 KB, stdlib)
+# Prereqs: python3 + git (for the version tag); no compiler needed.
 set -euo pipefail
 cd "$(dirname "$0")"
 

@@ -1,5 +1,7 @@
-# PyInstaller spec for Nikon Pill on Windows: one-file windowed EXE with the
-# NikonFirmwarePatch Release toolkit bundled as data under nfp/.
+# PyInstaller spec for Nikon Pill on Windows: one-file windowed EXE.
+# Bundled data: nfp/ (NikonFirmwarePatch toolkit) and fenestra/ (2-file
+# engine + pinned fxpatch); engines replay via the --nfp-engine-* flags.
+# Qt is pruned to Core/Gui/Widgets (+ hard deps) to keep the EXE small.
 import os
 import shutil
 from pathlib import Path

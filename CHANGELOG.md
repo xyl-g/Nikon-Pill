@@ -2,6 +2,28 @@
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)；版本号遵循语义化。
 
+## [0.3.0] — 2026-11-22
+
+### 变更
+- 跟进上游：NikonFirmwarePatch **v0.4.0 → v0.5.0**（"Regrouped feature set"）
+  - 功能组重组：`framing`+`video-quality` 合并为 **video-recording**，
+    `photo-tools` 拆分为 **still-photo-tools** + **raw-precapture**（旧组名被上游拒绝）
+  - 预编译补丁单元 9 → **19 个**；toolkit ZIP SHA-256 `f88181d6…`
+- UI 功能组卡片**动态化**：卡片由工具包实际功能组生成（含中文描述映射），
+  上游再重组组名时 UI 自动跟随，无需改代码
+
+### 上游新能力（随 v0.5.0 提供）
+- N-RAW 3:2 独立录像格式（"N-RAW 12-bit 3:2 (NEV)"，4.1K 120/100/60/50/30/25/24p，
+  30/25/24p 由 8280×5520 全读出 2:1 过采样）
+- SDR HEIF：10-bit .HIF 普通照片（SDR-J / SDR-H 菜单显示）
+- 照片画幅：4:3、2.39:1、65:24 (XPan) 加入图像区域选择（7 区域，Fn+拨盘快捷）
+- 上游另发布官方 macOS 应用"Z8 Patch Builder"（Apple silicon，签名公证）
+
+### 回归验证
+- v0.5.0 新四组全选构建 + 独立 verify 双 PASS（源码态与冻结态各一轮）
+
+## [0.2.6] — 2026-11-10
+
 ## [0.2.6] — 2026-11-10
 
 ### 变更

@@ -5,10 +5,10 @@ setlocal
 cd /d "%~dp0"
 
 set "VENDOR=%NFP_VENDOR_DIR%"
-if "%VENDOR%"=="" set "VENDOR=%USERPROFILE%\git\NikonFirmwarePatch-toolkit-v0.4.0"
+if "%VENDOR%"=="" set "VENDOR=%USERPROFILE%\git\NikonFirmwarePatch-toolkit-v0.5.0"
 
-set "ZIP_URL=https://github.com/XinmiaoZhao/NikonFirmwarePatch/releases/download/v0.4.0/NikonFirmwarePatch-v0.4.0-toolkit.zip"
-set "ZIP_SHA=82e82f18114710775b378668d0822616fc570a97e6489c04b0bf018744f574b1"
+set "ZIP_URL=https://github.com/XinmiaoZhao/NikonFirmwarePatch/releases/download/v0.5.0/NikonFirmwarePatch-v0.5.0-toolkit.zip"
+set "ZIP_SHA=f88181d69b55441dfff44cf7ac838d92d7493ddcdb7b1afef46ff3ed98516c18"
 
 if not exist "%VENDOR%\patch.py" (
   echo -- vendoring toolkit from Release ZIP --
@@ -16,7 +16,7 @@ if not exist "%VENDOR%\patch.py" (
   curl -sL -o vendor\nfp-toolkit.zip "%ZIP_URL%"
   certutil -hashfile vendor\nfp-toolkit.zip SHA256 | find /i "%ZIP_SHA%" >nul || (echo SHA-256 mismatch & exit /b 1)
   tar -xf vendor\nfp-toolkit.zip -C vendor
-  set "VENDOR=%CD%\vendor\NikonFirmwarePatch-v0.4.0"
+  set "VENDOR=%CD%\vendor\NikonFirmwarePatch-v0.5.0"
 )
 set "NFP_VENDOR_DIR=%VENDOR%"
 

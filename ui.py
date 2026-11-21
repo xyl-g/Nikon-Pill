@@ -26,12 +26,31 @@ TOOLKITS = [
     ('fenestra', 'Fenestra Z8 (cold-retry3)', '官方 r10 基线一键应用 · 机内 Z8Mouldes 模块菜单 · 需配套 .wlm 插件'),
 ]
 
-FEATURES = [
-    ('framing', '画面构图', '开放门 3:2 · N-RAW 四档画质 · 反挤压 1.25–2.00x'),
-    ('video-quality', '视频品质', 'ProRes 四档 + HQ 星标 · H.265 五档码率'),
-    ('log-colour', 'Log 色彩', 'N-Log · S-Log3 · Log3G10 与取景辅助'),
-    ('photo-tools', '拍照工具', 'RAW 预拍 C15/C30 · 像素偏移合成'),
-]
+# Feature-group metadata keyed by upstream group id. The card grid is built
+# from the toolkit's own FEATURES order (info.features), so NFP regroupings
+# (v0.4 framing/video-quality/photo-tools → v0.5 video-recording/
+# still-photo-tools/raw-precapture) render correctly without UI changes.
+FEATURE_META = {
+    'framing': ('画面构图', '开放门 3:2 · N-RAW 四档画质 · 反挤压 1.25–2.00x'),
+    'video-quality': ('视频品质', 'ProRes 四档 + HQ 星标 · H.265 五档码率'),
+    'video-recording': ('视频录制', '开放门 N-RAW · ProRes · H.265 码率档位'),
+    'log-colour': ('Log 色彩', 'N-Log · S-Log3 · Log3G10 与取景辅助'),
+    'photo-tools': ('拍照工具', 'RAW 预拍 C15/C30 · 像素偏移合成'),
+    'still-photo-tools': ('静态拍照', 'SDR HEIF · 照片画幅 4:3 / 2.39:1 / 65:24'),
+    'raw-precapture': ('RAW 预拍', 'C15/C30/C60/C120 预拍 · 像素偏移合成'),
+}
+
+
+def _feature_meta(key):
+    return FEATURE_META.get(key, (key, '上游功能组'))
+
+
+def _features_order():
+    """Feature order of the active toolkit, falling back to metadata order."""
+    info = getattr(MainWindow._instance, 'info', None) if MainWindow._instance else None
+    if info and info.features:
+        return [k for k in info.features if k in FEATURE_META] or info.features
+    return list(FEATURE_META)
 
 
 class MainWindow(QMainWindow):
@@ -245,15 +264,42 @@ class MainWindow(QMainWindow):
         return card
 
     def _build_features_card(self):
-        card = self._card('补丁功能组', '至少选 1 组 · 共 15 种组合')
+        card = self._card('补丁功能组', '至少选 1 组 · 组合数随方案版本而定')
         self.ft_count = QLabel('已选 0 / 4 组')
         self.ft_count.setProperty('hint', True)
         card.layout().itemAt(0).layout().addWidget(self.ft_count)
 
-        grid = QGridLayout()
-        grid.setSpacing(10)
+        # Placeholder grid replaced by _rebuild_feature_cards() whenever the
+        # toolkit is (re)detected — upstream may regroup ids across versions.
+        self._feat_grid_host = QGridLayout()
+        self._feat_grid_host.setSpacing(10)
+        card.layout().addLayout(self._feat_grid_host)
+        self._feature_card_widget = card
+        self._rebuild_feature_cards()
+
+        actions = QHBoxLayout()
+        self.ft_all_btn = QPushButton('全选')
+        self.ft_none_btn = QPushButton('清空')
+        for b in (self.ft_all_btn, self.ft_none_btn):
+            b.setFixedWidth(70)
+        actions.addWidget(self.ft_all_btn)
+        actions.addWidget(self.ft_none_btn)
+        actions.addStretch(1)
+        card.layout().addLayout(actions)
+        return card
+
+    def _rebuild_feature_cards(self):
+        """(Re)populate the feature grid from the active toolkit's groups."""
+        # Drop previous cards if this is a re-detection.
+        while self._feat_grid_host.count():
+            item = self._feat_grid_host.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+
+        features = self.info.features if (self.info and self.info.features) else list(FEATURE_META)
         self.feature_boxes = {}
-        for i, (key, name, desc) in enumerate(FEATURES):
+        for i, key in enumerate(features):
+            name, desc = _feature_meta(key)
             cardf = QFrame()
             cardf.setProperty('featCard', True)
             cardf.setProperty('selected', True)   # default: all groups on
@@ -269,20 +315,9 @@ class MainWindow(QMainWindow):
             sub.setWordWrap(True)
             v.addWidget(sub)
             cardf.mousePressEvent = (lambda ev, k=key, c=cardf: self._toggle_feature(k, c))
-            grid.addWidget(cardf, i // 2, i % 2)
+            self._feat_grid_host.addWidget(cardf, i // 2, i % 2)
             self.feature_boxes[key] = cardf
-        card.layout().addLayout(grid)
-
-        actions = QHBoxLayout()
-        self.ft_all_btn = QPushButton('全选')
-        self.ft_none_btn = QPushButton('清空')
-        for b in (self.ft_all_btn, self.ft_none_btn):
-            b.setFixedWidth(70)
-        actions.addWidget(self.ft_all_btn)
-        actions.addWidget(self.ft_none_btn)
-        actions.addStretch(1)
-        card.layout().addLayout(actions)
-        return card
+        self.ft_count.setText(f'已选 {len(features)} / {len(features)} 组')
 
     def _build_output_card(self):
         card = self._card('版本与输出', '版本号即相机菜单显示的固件版本')
@@ -524,6 +559,9 @@ class MainWindow(QMainWindow):
         self.tk_status.setText(('✓ ' if self.info.ready else '⚠ ') + notes)
         self.tk_status.setStyleSheet('' if self.info.ready else f'color: {theme.WARN};')
         is_fenestra = self.info.kind == 'fenestra'
+        if not is_fenestra:
+            # Upstream may regroup ids across versions — rebuild the card grid.
+            self._rebuild_feature_cards()
         # Fenestra is content-pinned: collapse the NFP-only blocks entirely
         # (feature groups, version/tag fields, fxpatch picker) instead of
         # showing disabled widgets.
@@ -647,7 +685,8 @@ class MainWindow(QMainWindow):
             self.version_note.setText('格式 NN.NN')
             self.version_note.setStyleSheet('')
 
-        self.ft_count.setText('由 .fxpatch 决定' if fenestra else f'已选 {len(features)} / 4 组')
+        self.ft_count.setText('由 .fxpatch 决定' if fenestra
+                              else f'已选 {len(features)} / {len(self.feature_boxes)} 组')
         if fenestra:
             self.out_preview.setText(
                 f'输出：{base / "Z_8_0311-cold-retry3.bin"}（生成后拷到存储卡根目录并改名 Z_8_0311.bin）'
@@ -737,23 +776,23 @@ class MainWindow(QMainWindow):
             self._log('info', '开始应用 Fenestra cold-retry3 补丁（.fxpatch）')
             self._log('info', f'输出文件 {out_bin}')
         else:
-            order = [k for k, _, _ in FEATURES]
-            features = sorted(self._selected(), key=order.index)
             version = self.version_edit.text().strip()
             tag = self.tag_edit.text().strip()
             out_dir = self._new_output_dir(base, version, tag)
             self._build_dir = out_dir
             self._build_bin = out_dir / output_name(version)
             self._fenestra_expected = None
-            self._log('info', f'开始构建 {output_name(version)} · {" + ".join(features)}')
+            self._log('info', f'开始构建 {output_name(version)} · {" + ".join(self._selected())}')
             self._log('info', f'输出目录 {out_dir}')
         self._identity = ''
         self._sha = ''
         self.result_card.hide()
         self._set_busy(True)
+        # Upstream expects groups in its own canonical order.
+        order = self.info.features if self.info and self.info.features else list(self.feature_boxes)
+        features = sorted(self._selected(), key=order.index)
         self.worker = TaskWorker('build', self.info, self._fw_path,
-                                 features=sorted(self._selected(),
-                                                 key=[k for k, _, _ in FEATURES].index),
+                                 features=features,
                                  version=self.version_edit.text().strip(),
                                  tag=self.tag_edit.text().strip(),
                                  output_dir=self._build_dir, output_bin=self._build_bin)

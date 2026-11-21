@@ -4,7 +4,7 @@
 
 | 方案 | 来源 | 特点 |
 |---|---|---|
-| **NikonFirmwarePatch** | [XinmiaoZhao/NikonFirmwarePatch](https://github.com/XinmiaoZhao/NikonFirmwarePatch) v0.4.0 | 四功能组任意组合（15 种）、自定版本号（相机菜单显示）、构建含独立字节级校验 |
+| **NikonFirmwarePatch** | [XinmiaoZhao/NikonFirmwarePatch](https://github.com/XinmiaoZhao/NikonFirmwarePatch) v0.5.0 | 四功能组任意组合（15 种）、自定版本号（相机菜单显示）、构建含独立字节级校验 |
 | **Fenestra Z8 (cold-retry3)** | [PIPA12344/Fenestra-Z8-C311-source](https://github.com/PIPA12344/Fenestra-Z8-C311-source) r10 | 官方基线一键应用（秒级），机内经 **Z8Mouldes** 模块菜单使用，功能经 `.wlm` 插件扩展 |
 
 两套工具包在打包时**全部内置**（构建脚本自动从各自上游下载并做 SHA-256 校验），最终用户**无需安装 Python、无需编译器、无需下载任何工具**。当前版本 **0.2.6**，变更史见 [CHANGELOG.md](CHANGELOG.md)。
@@ -21,7 +21,8 @@
 
 **仅 NikonFirmwarePatch 方案**
 
-- **功能组卡片** — 四组任选组合（共 15 种有效组合），点卡片即切换选中态
+- **功能组卡片（动态）** — 卡片由工具包实际功能组生成，上游重组组名（v0.4→v0.5）时自动跟随；点卡片切换选中态
+- **新能力随 v0.5.0** — N-RAW 3:2 独立录像格式（4.1K 120p）、SDR HEIF 静态照片、照片画幅 4:3 / 2.39:1 / 65:24 (XPan)
 - **版本号即菜单版本** — 公开版本 `NN.NN` 直接写入相机菜单显示的固件版本，实时预览「相机将显示 C xx.xx」
 - **时间戳输出** — 输出位置可选已存在的文件夹；每次构建自动创建 `v{版本}-{tag}_{时间戳}/` 子目录，永不覆盖历史产物
 - **构建后自动独立校验** — 构建完成后自动运行上游 `verify.py` 字节级比对（PASS 才算成功），支持随时「重新校验」
@@ -48,7 +49,7 @@
 1. **构建方案** — 两张方案卡二选一（NFP 组合构建 / Fenestra 基线应用）
 2. **固件文件** — 选择 Nikon 官方 `Z_8_0311.bin`（或直接拖入窗口），自动校验
 3. **按方案分支**：
-   - *NikonFirmwarePatch*：点功能组卡片组合（画面构图 / 视频品质 / Log 色彩 / 拍照工具），填公开版本（相机将显示）与内部 tag
+   - *NikonFirmwarePatch*：点功能组卡片组合（视频录制 / Log 色彩 / 静态拍照 / RAW 预拍，随上游版本自动跟随），填公开版本（相机将显示）与内部 tag
    - *Fenestra*：功能与版本由 `cold-retry3.fxpatch` 决定，无需选择；产物 `Z_8_0311-cold-retry3.bin`
 4. **输出位置** — 任意文件夹（可已存在）；NFP 自动建时间戳子目录，Fenestra 直接产出单文件
 5. **构建固件** — 后台运行；NFP 用时 1–3 分钟，Fenestra 数秒。完成后自动校验：
@@ -71,7 +72,7 @@
 git clone https://github.com/xyl-g/Nikon-Pill.git
 cd Nikon-Pill
 python3 -m venv .venv && .venv/bin/pip install PySide6 capstone==5.0.7   # Windows: py -m venv .venv
-./.venv/bin/python backend.py --toolkit ~/git/NikonFirmwarePatch-toolkit-v0.4.0   # 自测（--kind fenestra 可测另一套）
+./.venv/bin/python backend.py --toolkit ~/git/NikonFirmwarePatch-toolkit-v0.5.0   # 自测（--kind fenestra 可测另一套）
 ./.venv/bin/python main.py                                             # 启动 GUI
 ```
 
@@ -79,7 +80,7 @@ python3 -m venv .venv && .venv/bin/pip install PySide6 capstone==5.0.7   # Windo
 
 | 工具来源 | 获取方式 | 构建模式 |
 |---|---|---|
-| **NFP 完整 Release 工具包**（推荐） | 从 [NFP Releases](https://github.com/XinmiaoZhao/NikonFirmwarePatch/releases/tag/v0.4.0) 下载 `NikonFirmwarePatch-v0.4.0-toolkit.zip`（SHA-256 `82e82f18…`），按其 `SHA256SUMS.txt` 核对后解压 | 预编译（无需编译器） |
+| **NFP 完整 Release 工具包**（推荐） | 从 [NFP Releases](https://github.com/XinmiaoZhao/NikonFirmwarePatch/releases/tag/v0.5.0) 下载 `NikonFirmwarePatch-v0.5.0-toolkit.zip`（SHA-256 `f88181d6…`），按其 `SHA256SUMS.txt` 核对后解压 | 预编译（无需编译器） |
 | NFP Git 克隆 | `git clone https://github.com/XinmiaoZhao/NikonFirmwarePatch` | 源码编译（**需要 clang**，且编译器版本须与上游审阅配方一致——上游锁定 Apple clang 21.0.0 字节；CLT 自动升级会导致 `Compiled symbols differ` 失败） |
 | **Fenestra**（推荐直接下载） | 无需手动准备：构建脚本会自动获取；手动放置时只需 `patcher.py` + `host/cipher_patch.py` + `cold-retry3.fxpatch` 三个文件放在同一目录 | 纯标准库，任意平台 |
 
